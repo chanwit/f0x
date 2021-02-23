@@ -1,0 +1,76 @@
+version: '2'
+services:
+  etcd:
+    image: quay.io/coreos/etcd:latest
+    networks:
+      fluxnet:
+        aliases:
+          - etcd
+    ports:
+      - "4001:4001"
+      - "2380:2380"
+      - "2379:2379"
+    command: [
+      "/usr/local/bin/etcd",
+      "-advertise-client-urls=http://0.0.0.0:2379",
+      "-listen-client-urls=http://0.0.0.0:2379"
+    ]
+  apiserver:
+    image: gcr.io/google_containers/kube-apiserver-amd64:v1.18.6
+    networks:
+      fluxnet:
+        aliases:
+          - apiserver
+    ports:
+      - "8080:8080"
+    privileged: true
+    command: [
+      "kube-apiserver", "--etcd-servers", "http://etcd:2379",
+      "--service-cluster-ip-range", "10.99.0.0/16",
+      "--insecure-port", "8080",
+      "-v", "2",
+      "--insecure-bind-address", "0.0.0.0"
+    ]
+  source:
+    image: ghcr.io/fluxcd/source-controller:v0.8.1
+    networks:
+      fluxnet:
+        aliases:
+          - source
+    restart: always
+    user: 1000:1000
+    volumes:
+      - $PWD/kubeconfig:/kubeconfig
+      - $PWD/data:/data
+    environment:
+      - KUBECONFIG=/kubeconfig
+      - RUNTIME_NAMESPACE=flux-system
+    command: [
+      "--events-addr=http://notification-controller/",
+      "--watch-all-namespaces=true",
+      "--log-level=debug",
+      "--log-encoding=json",
+      "--storage-path=/data",
+      "--storage-adv-addr=source:9090",
+    ]
+  kustomize:
+    image: ghcr.io/fluxcd/kustomize-controller:v0.8.1
+    networks:
+      fluxnet:
+        aliases:
+          - kustomize
+    restart: always
+    user: 1000:1000
+    volumes:
+      - $PWD/kubeconfig:/kubeconfig
+    environment:
+      - KUBECONFIG=/kubeconfig
+      - RUNTIME_NAMESPACE=flux-system
+    command: [
+      "--watch-all-namespaces=true",
+      "--log-level=debug",
+      "--log-encoding=json"
+    ]
+networks:
+  fluxnet:
+    driver: bridge

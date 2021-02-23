@@ -1,0 +1,11 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta1
+kind: GitRepository
+metadata:
+  name: edge
+  namespace: flux-system
+spec:
+  interval: 1m0s
+  ref:
+    branch: main
+  url: https://github.com/chanwit/test-flux2-compose
