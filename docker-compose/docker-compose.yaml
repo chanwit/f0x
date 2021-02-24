@@ -1,19 +1,15 @@
 version: '2'
 services:
   etcd:
-    image: quay.io/coreos/etcd:latest
+    image: chanwit/kine:v0.6.0
     networks:
       fluxnet:
         aliases:
           - etcd
-    ports:
-      - "4001:4001"
-      - "2380:2380"
-      - "2379:2379"
     command: [
-      "/usr/local/bin/etcd",
-      "-advertise-client-urls=http://0.0.0.0:2379",
-      "-listen-client-urls=http://0.0.0.0:2379"
+      "/bin/kine",
+      "--listen-address=tcp://0.0.0.0:2379",
+      "--endpoint=sqlite"
     ]
   apiserver:
     image: gcr.io/google_containers/kube-apiserver-amd64:v1.18.6
@@ -26,7 +22,7 @@ services:
     privileged: true
     command: [
       "kube-apiserver", "--etcd-servers", "http://etcd:2379",
-      "--service-cluster-ip-range", "10.99.0.0/16",
+      "--service-cluster-ip-range", "10.96.0.0/16",
       "--insecure-port", "8080",
       "-v", "2",
       "--insecure-bind-address", "0.0.0.0"
@@ -37,6 +33,7 @@ services:
       fluxnet:
         aliases:
           - source
+          - source-controller
     restart: always
     user: 1000:1000
     volumes:
@@ -51,7 +48,7 @@ services:
       "--log-level=debug",
       "--log-encoding=json",
       "--storage-path=/data",
-      "--storage-adv-addr=source:9090",
+      "--storage-adv-addr=source-controller:9090",
     ]
   kustomize:
     image: ghcr.io/fluxcd/kustomize-controller:v0.8.1
@@ -59,6 +56,7 @@ services:
       fluxnet:
         aliases:
           - kustomize
+          - kustomize-controller
     restart: always
     user: 1000:1000
     volumes:
@@ -71,6 +69,25 @@ services:
       "--log-level=debug",
       "--log-encoding=json"
     ]
+  controller:
+    build:
+      context: ./controller
+    volumes:
+      - $PWD/kubeconfig:/kubeconfig
+    networks:
+      fluxnet:
+        aliases:
+          - controller
+    restart: always
+    environment:
+      - KUBECONFIG=/kubeconfig
+    command: [
+      "kopf", "run",
+      "/src/controller.py",
+      "--standalone",
+      "--verbose"
+    ]
+
 networks:
   fluxnet:
     driver: bridge
