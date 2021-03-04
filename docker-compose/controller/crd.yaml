@@ -4,21 +4,18 @@
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: kopfexamples.kopf.dev
+  name: compose.f0x.dev
 spec:
   scope: Namespaced
-  group: kopf.dev
+  group: f0x.dev
   names:
-    kind: KopfExample
-    plural: kopfexamples
-    singular: kopfexample
+    kind: Compose
+    plural: compose
+    singular: compose
     shortNames:
-      - kopfexes
-      - kopfex
-      - kexes
-      - kex
+      - compose
   versions:
-    - name: v1
+    - name: v1alpha1
       served: true
       storage: true
       schema:
@@ -40,10 +37,10 @@ spec:
         - name: Children
           type: string
           priority: 0
-          jsonPath: .status.create_fn.children
+          jsonPath: .status.create.children
           description: The children pods created.
         - name: Message
           type: string
           priority: 0
-          jsonPath: .status.create_fn.message
+          jsonPath: .status.create.message
           description: As returned from the handler (sometimes).

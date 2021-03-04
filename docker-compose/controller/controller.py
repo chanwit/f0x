@@ -1,6 +1,5 @@
 import kopf
 
-
 @kopf.on.login()
 async def login_fn(**kwargs):
     return kopf.ConnectionInfo(
@@ -8,7 +7,7 @@ async def login_fn(**kwargs):
         insecure=True,
     )
 
-@kopf.on.create('kopfexamples')
-def create_fn(spec, **kwargs):
+@kopf.on.create('compose')
+def create(spec, **kwargs):
     print(f"And here we are! Creating: {spec}")
-    return {'message': 'hello world'}  # will be the new status
+    return {'message': "version: {version}".format(version=spec["version"])}  # will be the new status
