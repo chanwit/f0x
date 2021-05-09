@@ -12,7 +12,7 @@ But Rootless Flux's controlplane is optimized just to run Flux.
 #### Why Rootless Flux is important?
 
 In corporate Kubernetes clusters, users normally are allowed to use their namespaces with limited access. No ClusterAdmin. No CRDs are allowed.
-Rootless Flux solves this problem by offering a rootless Flux cluster, which is able to run in those limited namespaces without requiring ClusterAdmin nor CRDs installed on the host cluster. The controlplane is pre-loaded CRDs and other resources for Flux.
+Rootless Flux solves this problem by offering a rootless Flux controlplane, which is able to run in those limited namespaces without requiring ClusterAdmin nor CRDs installed on the host cluster. The controlplane is pre-loaded CRDs and other resources for Flux.
 
 Rootless Flux allows GitOps to run anywhere even in a restricted cluster environment, like OpenShift Dev Sandbox.  
 
