@@ -6,7 +6,7 @@ Running Flux effortlessly anywhere
 ### Rootless Flux
 
 Rootless Flux is a F0x implementation deployed as a StatefulSet along with a side-car K8s API server. 
-This technique has been used to implement virtual K8s clusters in KCP and vcluster. 
+This similar technique has been used recently in other virtual K8s cluster implementations, such as KCP and vcluster. 
 But Rootless Flux's controlplane is optimized just to run Flux.
 
 #### Why Rootless Flux is important?
