@@ -1,0 +1,100 @@
+kind: StatefulSet
+apiVersion: apps/v1
+metadata:
+  name: rootless-flux-controlplane
+  labels:
+    app: f0x
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: f0x
+  template:
+    metadata:
+      labels:
+        app: f0x
+    spec:
+      containers:
+        - name: control-plane
+          command:
+            - /sbin/tini
+            - '--'
+            - /usr/local/bin/k0s
+          env:
+            - name: EKZ_DISABLE_SCHEDULER
+              value: '1'
+            - name: EKZ_DISABLE_CONTROLLER_MANAGER
+              value: '1'
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: f0x-vol
+              mountPath: /var/lib/k0s
+          terminationMessagePolicy: File
+          image: 'quay.io/ekz-io/ekz:v1.19.8-eks-1-19-4.1'
+          args:
+            - controller
+        - name: source
+          command:
+            - /sbin/tini
+            - '--'
+            - source-controller
+          env:
+            - name: KUBECONFIG
+              value: /var/lib/k0s/pki/admin.conf
+            - name: RUNTIME_NAMESPACE
+              value: flux-system
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: f0x-vol
+              mountPath: /var/lib/k0s
+              readOnly: true              
+            - name: source-data-vol
+              mountPath: /data
+          terminationMessagePolicy: File
+          image: 'ghcr.io/fluxcd/source-controller:v0.12.1'
+          args:
+            - '--watch-all-namespaces=false'
+            - '--log-level=debug'
+            - '--log-encoding=json'
+            - '--storage-path=/data'
+            - '--storage-adv-addr=127.0.0.1:9090'
+            - '--metrics-addr=:8080'
+            - '--health-addr=:9440'
+        - name: kustomize
+          command:
+            - /sbin/tini
+            - '--'
+            - kustomize-controller
+          env:
+            - name: KUBECONFIG
+              value: /var/lib/k0s/pki/admin.conf
+            - name: RUNTIME_NAMESPACE
+              value: flux-system
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: f0x-vol
+              mountPath: /var/lib/k0s
+              readOnly: true
+          terminationMessagePolicy: File
+          image: 'ghcr.io/fluxcd/kustomize-controller:v0.12.0'
+          args:
+            - '--watch-all-namespaces=false'
+            - '--log-level=debug'
+            - '--log-encoding=json'
+            - '--metrics-addr=:8081'
+            - '--health-addr=:9441'
+  volumeClaimTemplates:
+  - metadata:
+      name: f0x-vol
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 500Mi
+  - metadata:
+      name: source-data-vol
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 500Mi
