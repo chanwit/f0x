@@ -1,7 +1,7 @@
 # The f0x project
 Running Flux effortlessly anywhere
 
-## Implementations
+## Models
 
 ### Rootless Flux
 
@@ -15,6 +15,11 @@ In corporate Kubernetes clusters, users normally are allowed to use their namesp
 Rootless Flux solves this problem by offering a rootless Flux controlplane, which is able to run in those limited namespaces without requiring ClusterAdmin nor CRDs installed on the host cluster. The controlplane is pre-loaded CRDs and other resources for Flux.
 
 Rootless Flux allows GitOps to run anywhere even in a restricted cluster environment, like OpenShift Dev Sandbox.  
+
+### Serverless Flux
+
+It is possible to run the Flux controlplane in a serverless way. This model implements Kubernetes-as-an-AppServer.
+Workload is managed by GitOps inside a cluster and expose a singile endpoint.
 
 ### Flux for Docker
 
